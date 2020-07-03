@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script>
+            function request(args) {
+                var url        = args.url;
+                var method     = args.method;
+                var data       = args.data;
+                if (method == undefined) {
+                    method = "GET";
+                }
+                if (data == undefined) {
+                    data = null;
+                }
+                var req = new XMLHttpRequest();
+                req.onreadystatechange = function () {
+                    if (req.readyState == XMLHttpRequest.DONE) {
+                        if (req.status == 200) {
+                            console.log(req.response);
+                        } else {
+                            console.log(req.statusText);
+                        }
+                    }
+                }
+                req.open(method, url, true);
+                req.responseType = "json";
+                req.setRequestHeader("Content-Type", "application/json");
+                req.send(JSON.stringify(data));
+            };
+            function listWords() {
+                request({
+                    "url": "/words"
+                })
+            };
+            function getWord() {
+                var id = document.getElementById('pick-word-id').value;
+                request({
+                    "url": "/words/" + id
+                })
+            };
+            function insertWord() {
+                var word = document.getElementById('insert-word').value;
+                request({
+                    "url": "/words",
+                    "method": "POST",
+                    "data": {
+                        word
+                    }
+                })
+            };
+            function updateWord() {
+                var id = document.getElementById('update-word-id').value;
+                var word = document.getElementById('update-word').value;
+                request({
+                    "url": "/words/" + id,
+                    "method": "PUT",
+                    "data": {
+                        word
+                    }
+                })
+            };
+            function deleteWord() {
+                var id = document.getElementById('delete-word-id').value;
+                request({
+                    "url": "/words/" + id,
+                    "method": "DELETE"
+                })
+            };
+            function getMyIP() {
+                request({
+                    "url": "/myip"
+                })
+            };
+        </script>
+    </head>
+    <body>
+        Open the console
+        <br>
+        <br>
+        <button onclick="listWords()">list all the words</button>
+        <br>
+        <br>
+        <input id="pick-word-id" type="text" placeholder="type the word id">
+        <button onclick="getWord()">pick</button>
+        <br>
+        <br>
+        <input id="insert-word" type="text" placeholder="type the word">
+        <button onclick="insertWord()">insert</button>
+        <br>
+        <br>
+        <input id="update-word-id" type="text" placeholder="type the word id">
+        <input id="update-word" type="text" placeholder="type the word">
+        <button onclick="updateWord()">update</button>
+        <br>
+        <br>
+        <input id="delete-word-id" type="text" placeholder="type the word id">
+        <button onclick="deleteWord()">delete</button>
+        <br>
+        <br>
+        <button onclick="getMyIP()">get my IP</button>
+    </body>
+</html>

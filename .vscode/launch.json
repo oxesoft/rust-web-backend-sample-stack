@@ -1,0 +1,29 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "preLaunchTask": {
+                "type": "cargo",
+                "subcommand": "build",
+                "problemMatcher": [
+                    "$rustc"
+                ],
+                "label": "Rust: cargo build"
+            },
+            "env": {"DATABASE_URL": "/tmp/olarust.db"},
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug",
+            "program": "${workspaceFolder}/target/debug/sample",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "sourceMap": {
+                "/rustc/CHANGE_HERE/src": "CHANGE_HERE"
+            }
+        }
+    ]
+}
