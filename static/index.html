@@ -74,27 +74,35 @@
         </script>
     </head>
     <body>
-        Open the console
+        Open the developer console
         <br>
         <br>
         <button onclick="listWords()">list all the words</button>
         <br>
         <br>
-        <input id="pick-word-id" type="text" placeholder="type the word id">
-        <button onclick="getWord()">pick</button>
+        <form onsubmit="getWord(); return false;">
+            <input id="pick-word-id" type="number" min="1" required placeholder="type the word id">
+            <button type="submit">pick</button>
+        </form>
         <br>
         <br>
-        <input id="insert-word" type="text" placeholder="type the word">
-        <button onclick="insertWord()">insert</button>
+        <form onsubmit="insertWord(); return false;">
+            <input id="insert-word" type="text" required placeholder="type the word">
+            <button type="submit">insert</button>
+        </form>
         <br>
         <br>
-        <input id="update-word-id" type="text" placeholder="type the word id">
-        <input id="update-word" type="text" placeholder="type the word">
-        <button onclick="updateWord()">update</button>
+        <form onsubmit="updateWord(); return false;">
+            <input id="update-word-id" type="number" min="1" required placeholder="type the word id">
+            <input id="update-word" type="text" required placeholder="type the word">
+            <button type="submit">update</button>
+        </form>
         <br>
         <br>
-        <input id="delete-word-id" type="text" placeholder="type the word id">
-        <button onclick="deleteWord()">delete</button>
+        <form onsubmit="deleteWord(); return false;">
+            <input id="delete-word-id" type="number" min="1" required placeholder="type the word id">
+            <button type="submit">delete</button>
+        </form>
         <br>
         <br>
         <button onclick="getMyIP()">get my IP</button>

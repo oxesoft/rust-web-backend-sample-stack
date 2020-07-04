@@ -37,10 +37,13 @@ fn sample_get(session: Session, word_id: i32) -> JsonValue {
         .filter(id.eq(word_id))
         .load::<Words>(&connection)
         .expect("Error loading records");
-    json!({
-        "word": rows[0].word,
-        "requests_count": get_requests_count(session)
-    })
+    if rows.len() > 0 {
+        return json!({
+            "word": rows[0].word,
+            "requests_count": get_requests_count(session)
+        })
+    }
+    json!({})
 }
 
 #[post("/words", data = "<obj>")]
@@ -115,7 +118,7 @@ fn sample_delete(session: Session, word_id: i32) -> JsonValue {
 }
 
 #[get("/myip")]
-fn sample_http_client() -> JsonValue {
+fn sample_http_client(session: Session) -> JsonValue {
     fn get_ip() -> Result<String, Box<dyn std::error::Error>> {
         #[derive(Deserialize)]
         struct Ip {
@@ -126,7 +129,8 @@ fn sample_http_client() -> JsonValue {
     }
     let result = get_ip();
     json!({
-        "myIP": result.unwrap()
+        "myIP": result.unwrap(),
+        "requests_count": get_requests_count(session)
     })
 }
 
