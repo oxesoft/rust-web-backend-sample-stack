@@ -4,50 +4,58 @@
 #[macro_use] extern crate rocket_contrib;
 #[macro_use] extern crate serde_derive;
 
+use rocket::http::{Cookie, Cookies};
 use rocket_contrib::json::{Json, JsonValue};
 use rocket_contrib::serve::StaticFiles;
 use sample::schema::words::dsl::*;
 use sample::models::{Words, NewWord};
 use diesel::prelude::*;
 
-#[derive(Default, Clone)]
-struct SessionData {
-    requests_count: usize,
-}
-
-type Session<'a> = rocket_session::Session<'a, SessionData>;
-
 #[derive(Deserialize)]
 struct SampleObject {
     word: String
 }
 
-fn get_requests_count(session: Session) -> usize {
-    let value = session.tap(|sess| {
-        sess.requests_count += 1;
-        sess.requests_count
-    });
-    value
+fn get_requests_count(mut cookies: Cookies) -> usize {
+    // this is a sample of using encrypted cookies to persist session data
+    // instead of just in integer you can serialize/deserialize a Json object
+    let session = cookies.get_private("session");
+    let mut counter = 0;
+    if session != None {
+        counter = match session.unwrap().value().parse() {
+            Ok(counter) => counter,
+            Err(e) => {
+                println!("{}", e);
+                0
+            }
+        }
+    }
+    counter += 1;
+    cookies.add_private(Cookie::new("session", counter.to_string()));
+    counter
 }
 
 #[get("/words/<word_id>")]
-fn sample_get(session: Session, word_id: i32) -> JsonValue {
+fn sample_get(cookies: Cookies, word_id: i32) -> JsonValue {
     let connection = sample::establish_connection();
     let rows = words
         .filter(id.eq(word_id))
         .load::<Words>(&connection)
         .expect("Error loading records");
     if rows.len() > 0 {
-        return json!({
+        json!({
             "word": rows[0].word,
-            "requests_count": get_requests_count(session)
+            "requests_count": get_requests_count(cookies)
+        })
+    } else {
+        json!({
+            "requests_count": get_requests_count(cookies)
         })
     }
-    json!({})
 }
 
 #[post("/words", data = "<obj>")]
-fn sample_create(session: Session, obj: Json<SampleObject>) -> JsonValue {
+fn sample_create(cookies: Cookies, obj: Json<SampleObject>) -> JsonValue {
     let connection = sample::establish_connection();
     let new_word = NewWord {
         word: &obj.word,
@@ -65,13 +73,13 @@ fn sample_create(session: Session, obj: Json<SampleObject>) -> JsonValue {
             .collect::<Vec<_>>())
     }).unwrap();
     json!({
-        "requests_count": get_requests_count(session),
+        "requests_count": get_requests_count(cookies),
         "inserted_id": inserted_rows[0].id
     })
 }
 
 #[get("/words")]
-fn sample_retrieve(session: Session) -> JsonValue {
+fn sample_retrieve(cookies: Cookies) -> JsonValue {
     let connection = sample::establish_connection();
     let rows = words
         .load::<Words>(&connection)
@@ -90,35 +98,35 @@ fn sample_retrieve(session: Session) -> JsonValue {
     }
     json!({
         "words": items,
-        "requests_count": get_requests_count(session)
+        "requests_count": get_requests_count(cookies)
     })
 }
 
 #[put("/words/<word_id>", data = "<obj>")]
-fn sample_update(session: Session, word_id: i32, obj: Json<SampleObject>) -> JsonValue {
+fn sample_update(cookies: Cookies, word_id: i32, obj: Json<SampleObject>) -> JsonValue {
     let connection = sample::establish_connection();
     diesel::update(words.find(word_id))
         .set(word.eq(obj.word.clone()))
         .execute(&connection)
         .expect("Error updating record");
     json!({
-        "requests_count": get_requests_count(session)
+        "requests_count": get_requests_count(cookies)
     })
 }
 
 #[delete("/words/<word_id>")]
-fn sample_delete(session: Session, word_id: i32) -> JsonValue {
+fn sample_delete(cookies: Cookies, word_id: i32) -> JsonValue {
     let connection = sample::establish_connection();
     diesel::delete(words.filter(id.eq(word_id)))
         .execute(&connection)
         .expect("Error deleting record");
     json!({
-        "requests_count": get_requests_count(session)
+        "requests_count": get_requests_count(cookies)
     })
 }
 
 #[get("/myip")]
-fn sample_http_client(session: Session) -> JsonValue {
+fn sample_http_client(cookies: Cookies) -> JsonValue {
     fn get_ip() -> Result<String, Box<dyn std::error::Error>> {
         #[derive(Deserialize)]
         struct Ip {
@@ -130,7 +138,7 @@ fn sample_http_client(session: Session) -> JsonValue {
     let result = get_ip();
     json!({
         "myIP": result.unwrap(),
-        "requests_count": get_requests_count(session)
+        "requests_count": get_requests_count(cookies)
     })
 }
 
@@ -144,7 +152,6 @@ fn not_found() -> JsonValue {
 
 fn main() {
     rocket::ignite()
-    .attach(Session::fairing()) 
     .register(
         catchers![
             not_found
