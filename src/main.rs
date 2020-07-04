@@ -17,22 +17,27 @@ struct SampleObject {
 }
 
 fn get_requests_count(mut cookies: Cookies) -> usize {
-    // this is a sample of using encrypted cookies to persist session data
-    // instead of just in integer you can serialize/deserialize a Json object
+    #[derive(Serialize, Deserialize)]
+    struct SessionObject {
+        counter: usize
+    }
     let session = cookies.get_private("session");
-    let mut counter = 0;
+    let mut session_object = SessionObject {
+        counter: 0
+    };
     if session != None {
-        counter = match session.unwrap().value().parse() {
-            Ok(counter) => counter,
+        session_object = serde_json::from_str(session.unwrap().value()).unwrap();
+    }
+    session_object.counter += 1;
+    let session_object_string = match serde_json::to_string(&session_object) {
+        Ok(session_object_string) => session_object_string,
             Err(e) => {
                 println!("{}", e);
-                0
+                format!("{{\"error\":{}}}", e)
             }
-        }
-    }
-    counter += 1;
-    cookies.add_private(Cookie::new("session", counter.to_string()));
-    counter
+    };
+    cookies.add_private(Cookie::new("session", session_object_string));
+    session_object.counter
 }
 
 #[get("/words/<word_id>")]
