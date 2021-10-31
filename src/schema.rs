@@ -1,6 +1,6 @@
 table! {
-    words (id) {
+    item (id) {
         id -> Integer,
-        word -> Text,
+        name -> Text,
     }
 }

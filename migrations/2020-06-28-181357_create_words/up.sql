@@ -1,5 +1,5 @@
 -- Your SQL goes here
-create table words (
+create table item (
     id integer primary key autoincrement not null,
-    word varchar not null
+    name varchar not null
 );

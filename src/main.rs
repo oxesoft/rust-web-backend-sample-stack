@@ -7,13 +7,13 @@
 use rocket::http::{Cookie, Cookies};
 use rocket_contrib::json::{Json, JsonValue};
 use rocket_contrib::serve::StaticFiles;
-use sample::schema::words::dsl::*;
-use sample::models::{Words, NewWord};
+use sample::schema::item::dsl::*;
+use sample::models::{Item, NewItem};
 use diesel::prelude::*;
 
 #[derive(Deserialize)]
 struct SampleObject {
-    word: String
+    name: String
 }
 
 fn get_requests_count(mut cookies: Cookies) -> usize {
@@ -40,39 +40,44 @@ fn get_requests_count(mut cookies: Cookies) -> usize {
     session_object.counter
 }
 
-#[get("/words/<word_id>")]
-fn sample_get(cookies: Cookies, word_id: i32) -> JsonValue {
+#[get("/items")]
+fn sample_retrieve_all(cookies: Cookies) -> JsonValue {
     let connection = sample::establish_connection();
-    let rows = words
-        .filter(id.eq(word_id))
-        .load::<Words>(&connection)
+    let rows = item
+        .load::<Item>(&connection)
         .expect("Error loading records");
-    if rows.len() > 0 {
-        json!({
-            "word": rows[0].word,
-            "requests_count": get_requests_count(cookies)
-        })
-    } else {
-        json!({
-            "requests_count": get_requests_count(cookies)
-        })
+    #[derive(Serialize)]
+    pub struct Record {
+        pub my_id: i32,
+        pub my_name: String
     }
+    let mut items = vec![];
+    for row in rows {
+        items.push(Record {
+            my_id: row.id,
+            my_name: row.name
+        });
+    }
+    json!({
+        "items": items,
+        "requests_count": get_requests_count(cookies)
+    })
 }
 
-#[post("/words", data = "<obj>")]
+#[post("/items", data = "<obj>")]
 fn sample_create(cookies: Cookies, obj: Json<SampleObject>) -> JsonValue {
     let connection = sample::establish_connection();
-    let new_word = NewWord {
-        word: &obj.word,
+    let new_item = NewItem {
+        name: &obj.name,
     };
     let inserted_rows = connection.transaction::<_, diesel::result::Error, _>(|| {
-        let inserted_count = diesel::insert_into(words)
-        .values(new_word)
+        let inserted_count = diesel::insert_into(item)
+        .values(new_item)
         .execute(&connection)?;
-        Ok(words
+        Ok(item
             .order(id.desc())
             .limit(inserted_count as i64)
-            .load::<Words>(&connection)?
+            .load::<Item>(&connection)?
             .into_iter()
             .rev()
             .collect::<Vec<_>>())
@@ -83,35 +88,30 @@ fn sample_create(cookies: Cookies, obj: Json<SampleObject>) -> JsonValue {
     })
 }
 
-#[get("/words")]
-fn sample_retrieve(cookies: Cookies) -> JsonValue {
+#[get("/items/<item_id>")]
+fn sample_retrieve(cookies: Cookies, item_id: i32) -> JsonValue {
     let connection = sample::establish_connection();
-    let rows = words
-        .load::<Words>(&connection)
+    let rows = item
+        .filter(id.eq(item_id))
+        .load::<Item>(&connection)
         .expect("Error loading records");
-    #[derive(Serialize)]
-    pub struct Record {
-        pub my_id: i32,
-        pub my_word: String
+    if rows.len() > 0 {
+        json!({
+            "name": rows[0].name,
+            "requests_count": get_requests_count(cookies)
+        })
+    } else {
+        json!({
+            "requests_count": get_requests_count(cookies)
+        })
     }
-    let mut items = vec![];
-    for row in rows {
-        items.push(Record {
-            my_id: row.id,
-            my_word: row.word
-        });
-    }
-    json!({
-        "words": items,
-        "requests_count": get_requests_count(cookies)
-    })
 }
 
-#[put("/words/<word_id>", data = "<obj>")]
-fn sample_update(cookies: Cookies, word_id: i32, obj: Json<SampleObject>) -> JsonValue {
+#[put("/items/<item_id>", data = "<obj>")]
+fn sample_update(cookies: Cookies, item_id: i32, obj: Json<SampleObject>) -> JsonValue {
     let connection = sample::establish_connection();
-    diesel::update(words.find(word_id))
-        .set(word.eq(obj.word.clone()))
+    diesel::update(item.find(item_id))
+        .set(name.eq(obj.name.clone()))
         .execute(&connection)
         .expect("Error updating record");
     json!({
@@ -119,10 +119,10 @@ fn sample_update(cookies: Cookies, word_id: i32, obj: Json<SampleObject>) -> Jso
     })
 }
 
-#[delete("/words/<word_id>")]
-fn sample_delete(cookies: Cookies, word_id: i32) -> JsonValue {
+#[delete("/items/<item_id>")]
+fn sample_delete(cookies: Cookies, item_id: i32) -> JsonValue {
     let connection = sample::establish_connection();
-    diesel::delete(words.filter(id.eq(word_id)))
+    diesel::delete(item.filter(id.eq(item_id)))
         .execute(&connection)
         .expect("Error deleting record");
     json!({
@@ -164,7 +164,7 @@ fn main() {
     )
     .mount("/",
         routes![
-            sample_get,
+            sample_retrieve_all,
             sample_create,
             sample_retrieve,
             sample_update,
@@ -172,6 +172,6 @@ fn main() {
             sample_http_client
         ]
     )
-    .mount("/", StaticFiles::from("./static"))
+    .mount("/", StaticFiles::from("./public"))
     .launch();
 }

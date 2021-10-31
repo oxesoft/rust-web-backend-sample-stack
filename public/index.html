@@ -25,44 +25,48 @@
                 req.open(method, url, true);
                 req.responseType = "json";
                 req.setRequestHeader("Content-Type", "application/json");
-                req.send(JSON.stringify(data));
+                if (data != null) {
+                    req.send(JSON.stringify(data));
+                } else {
+                    req.send();
+                }
             };
-            function listWords() {
+            function listItems() {
                 request({
-                    "url": "/words"
+                    "url": "/items"
                 })
             };
-            function getWord() {
-                var id = document.getElementById('pick-word-id').value;
+            function createItem() {
+                var name = document.getElementById('create-item').value;
                 request({
-                    "url": "/words/" + id
-                })
-            };
-            function insertWord() {
-                var word = document.getElementById('insert-word').value;
-                request({
-                    "url": "/words",
+                    "url": "/items",
                     "method": "POST",
                     "data": {
-                        word
+                        name
                     }
                 })
             };
-            function updateWord() {
-                var id = document.getElementById('update-word-id').value;
-                var word = document.getElementById('update-word').value;
+            function retrieveItem() {
+                var id = document.getElementById('retrieve-item-id').value;
                 request({
-                    "url": "/words/" + id,
+                    "url": "/items/" + id
+                })
+            };
+            function updateItem() {
+                var id = document.getElementById('update-item-id').value;
+                var name = document.getElementById('update-item').value;
+                request({
+                    "url": "/items/" + id,
                     "method": "PUT",
                     "data": {
-                        word
+                        name
                     }
                 })
             };
-            function deleteWord() {
-                var id = document.getElementById('delete-word-id').value;
+            function deleteItem() {
+                var id = document.getElementById('delete-item-id').value;
                 request({
-                    "url": "/words/" + id,
+                    "url": "/items/" + id,
                     "method": "DELETE"
                 })
             };
@@ -77,30 +81,30 @@
         Open the developer console
         <br>
         <br>
-        <button onclick="listWords()">list all the words</button>
+        <button onclick="listItems()">list all the items</button>
         <br>
         <br>
-        <form onsubmit="getWord(); return false;">
-            <input id="pick-word-id" type="number" min="1" required placeholder="type the word id">
-            <button type="submit">pick</button>
+        <form onsubmit="createItem(); return false;">
+            <input id="create-item" type="text" required placeholder="type the item name">
+            <button type="submit">create</button>
         </form>
         <br>
         <br>
-        <form onsubmit="insertWord(); return false;">
-            <input id="insert-word" type="text" required placeholder="type the word">
-            <button type="submit">insert</button>
+        <form onsubmit="retrieveItem(); return false;">
+            <input id="retrieve-item-id" type="number" min="1" required placeholder="type the item id">
+            <button type="submit">retrieve</button>
         </form>
         <br>
         <br>
-        <form onsubmit="updateWord(); return false;">
-            <input id="update-word-id" type="number" min="1" required placeholder="type the word id">
-            <input id="update-word" type="text" required placeholder="type the word">
+        <form onsubmit="updateItem(); return false;">
+            <input id="update-item-id" type="number" min="1" required placeholder="type the item id">
+            <input id="update-item" type="text" required placeholder="type the item name">
             <button type="submit">update</button>
         </form>
         <br>
         <br>
-        <form onsubmit="deleteWord(); return false;">
-            <input id="delete-word-id" type="number" min="1" required placeholder="type the word id">
+        <form onsubmit="deleteItem(); return false;">
+            <input id="delete-item-id" type="number" min="1" required placeholder="type the item id">
             <button type="submit">delete</button>
         </form>
         <br>

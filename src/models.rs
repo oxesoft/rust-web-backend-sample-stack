@@ -1,13 +1,13 @@
-use crate::schema::words;
+use crate::schema::item;
 
 #[derive(Queryable)]
-pub struct Words {
+pub struct Item {
     pub id: i32,
-    pub word: String
+    pub name: String
 }
 
 #[derive(Insertable)]
-#[table_name="words"]
-pub struct NewWord<'a> {
-    pub word: &'a String,
+#[table_name="item"]
+pub struct NewItem<'a> {
+    pub name: &'a String,
 }
