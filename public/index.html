@@ -9,27 +9,21 @@
                 if (method == undefined) {
                     method = "GET";
                 }
-                if (data == undefined) {
-                    data = null;
+                body = null;
+                if (data != undefined) {
+                    body = JSON.stringify(data);
                 }
-                var req = new XMLHttpRequest();
-                req.onreadystatechange = function () {
-                    if (req.readyState == XMLHttpRequest.DONE) {
-                        if (req.status == 200) {
-                            console.log(req.response);
-                        } else {
-                            console.log(req.statusText);
-                        }
-                    }
-                }
-                req.open(method, url, true);
-                req.responseType = "json";
-                req.setRequestHeader("Content-Type", "application/json");
-                if (data != null) {
-                    req.send(JSON.stringify(data));
-                } else {
-                    req.send();
-                }
+                console.log(data);
+                fetch(url, {
+                    method,
+                    body
+                }).then(function(response) {
+                    return response.json();
+                }).then(function(data) {
+                    console.log(data);
+                }).catch(function(error) {
+                    console.log(error);
+                });
             };
             function listItems() {
                 request({
