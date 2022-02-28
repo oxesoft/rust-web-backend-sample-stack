@@ -9,14 +9,17 @@
                 if (method == undefined) {
                     method = "GET";
                 }
-                body = null;
+                var body = null;
+                var headers = new Headers()
                 if (data != undefined) {
                     body = JSON.stringify(data);
+                    headers.append("Content-Type", "application/json");
                 }
                 console.log(data);
                 fetch(url, {
                     method,
-                    body
+                    body,
+                    headers
                 }).then(function(response) {
                     return response.json();
                 }).then(function(data) {
